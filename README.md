@@ -19,6 +19,7 @@ Answer "y" and press the Return key if you want to run the PATH update command
 ## PubMed Keyword PMID List
 * Run the following command line below:
    * esearch -db pubmed -query "your keyword or search terms" | efetch -format uid
+
 The command line will take the keyword or search terms and search the PubMed database to retrieve the records identified by the piped information and format the output into a simple list of unique identifiers
 
 * In order to save the list of PMIDs to a file, utilize a redirection operator to the mentioned command line
