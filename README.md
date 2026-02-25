@@ -23,9 +23,9 @@ Answer "y" and press the Return key if you want to run the PATH update command
 The command line will take the keyword or search terms and search the PubMed database to retrieve the records identified by the piped information and format the output into a simple list of unique identifiers
 
 * In order to save the list of PMIDs to a file type (recommend XML), utilize a redirection operator to the mentioned command line
-   * esearch -db pubmed -query "your keyword or search terms" | efetch -format uid > file_name.txt
+   * esearch -db pubmed -query "your keyword or search terms" | efetch -format uid > file_name
 
 ## PubMed Keyword PMID, Authors, Affiliations, and Journal List
 * Run the following command line below:
-   * xtract -input "file name" -pattern PubmedArticle -element MedlineCitation/PMID -block Author -pfx "\n" -element LastName,Initials,AffiliationInfo/Affiliation -sep "\n" 
+   * xtract -input "file name" -pattern PubmedArticle -element MedlineCitation/PMID -block Author -pfx "\n" -element LastName,Initials,AffiliationInfo/Affiliation -sep "\n" > file_name
 
