@@ -1,0 +1,42 @@
+from lxml import etree
+import csv
+
+xml_file = r"C:\Users\Isaac\Downloads\glycomics.xml"
+output_file = r"C:\Users\Isaac\Downloads\pubmed_authors.tsv"
+
+parser = etree.XMLParser(recover=True)
+tree = etree.parse(xml_file, parser)
+root = tree.getroot()
+
+with open(output_file, "w", newline="", encoding="utf-8") as file:
+    writer = csv.writer(file, delimiter="\t")
+
+    writer.writerow(["Author", "Country", "PMID"])
+
+    for article in root.xpath("//PubmedArticle"):
+
+        pmid = article.xpath(".//PMID/text()")
+        if not pmid:
+            continue
+        pmid = pmid[0]
+
+        for author in article.xpath(".//Author"):
+
+            last = author.findtext("LastName")
+            initials = author.findtext("Initials")
+
+            if not last or not initials:
+                continue
+
+            author_name = f"{last} {initials}"
+
+            affiliation = author.findtext(".//Affiliation")
+            country = "Unknown"
+
+            if affiliation:
+                country = affiliation.split(",")[-1].strip()
+
+            writer.writerow([author_name, country, pmid])
+
+print("TSV file created:")
+print(output_file)
