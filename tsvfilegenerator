@@ -11,7 +11,7 @@ root = tree.getroot()
 with open(output_file, "w", newline="", encoding="utf-8") as file:
     writer = csv.writer(file, delimiter="\t")
 
-    writer.writerow(["Author", "Country", "PMID"])
+    writer.writerow(["Author", "Affiliation", "Country"])
 
     for article in root.xpath("//PubmedArticle"):
 
