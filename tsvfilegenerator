@@ -35,8 +35,7 @@ with open(output_file, "w", newline="", encoding="utf-8") as file:
 
             if affiliation:
                 country = affiliation.split(",")[-1].strip()
-
-            writer.writerow([author_name, country, pmid])
+                writer.writerow([author_name, country, pmid])
 
 print("TSV file created:")
 print(output_file)
