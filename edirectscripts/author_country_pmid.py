@@ -2,14 +2,19 @@ from lxml import etree
 import csv
 import re
 
-xml_file = r"C:\Users\Isaac\Downloads\glycomics.xml"
-output_file = r"C:\Users\Isaac\Downloads\pubmed_authors.tsv"
+xml_file = "data/glycomics.xml"
+output_file = "output/pubmed_authors.tsv"
+country_csv = "data/countries.csv"
 
-countries = [
-    "United States","USA","China","Japan","Germany","United Kingdom","UK",
-    "France","Canada","Italy","Spain","Australia","India","South Korea",
-    "Netherlands","Sweden","Switzerland","Brazil","Norway","Denmark"
-]
+def load_countries(path):
+    countries = []
+    with open(path, newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            countries.append(row["country"].strip())
+    return countries
+
+countries = load_countries(countries_csv)
 
 parser = etree.XMLParser(recover=True)
 tree = etree.parse(xml_file, parser)
