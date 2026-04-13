@@ -25,7 +25,13 @@ The command line will take the keyword or search terms and search the PubMed dat
 * In order to save the list of PMIDs to a file type (recommend XML), utilize a redirection operator to the mentioned command line
    * esearch -db pubmed -query "your keyword or search terms" | efetch -format uid > file_name
 
-## PubMed Keyword PMID, Authors, Affiliations, and Journal List
+This step was done to ensure that all PMIDs for the corresponding keyword appeared. 
+
+## PubMed Keyword XML File 
 * Run the following command line below:
+   * esearch -db pubmed -query "your keyword or search terms" | efetch -format xml > file_name
+
+## PubMed Keyword PMID, Authors, Affiliations, and Journal List
+* Use the XML file created from the previous step to extract only the PMID, authors, affiliations, and journal list
    * xtract -input "file name" -pattern PubmedArticle -element MedlineCitation/PMID -block Author -pfx "\n" -element LastName,Initials,AffiliationInfo/Affiliation -sep "\n" > file_name
 
