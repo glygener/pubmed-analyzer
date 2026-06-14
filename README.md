@@ -1,5 +1,20 @@
 # PubMed Analyzer
-## EDirect Installation Instructions
+## Requirements
+* [EDirect](#edirect)
+## Usage
+This project contains scripts and tooling for PubMed data querying and analysis.
+* `data_scripts/search.sh [-r] [-o output_dir] search_term` Searches pubmed with a given search term an outputs the results to an XML file named after the search term
+   * -r: optional flag forces refresh of of the given search
+   * -o output_dir: optional arg specifies an output directory for the resulting xml file (default is pubmed-analyzer/data)
+   * search_term: the term to search PubMed for using EDirect
+
+* `data_scripts/parse.py [-h] [--csv] file_path` parses a given PubMed results XML file into a JSON file, pulling out each article's pmid, title, publication month and year, journal name, and author information
+
+   * -h: show usage information
+   * --csv: optional flag tells the script to output a flat csv file with author information in addition to JSON output
+   * file_path: full path to the XML file to be parsed
+      
+## <a name="edirect"></a>EDirect Installation Instructions
 * Open a terminal window and run one of the following commands to download and install the software:
 
     * sh -c "$(curl -fsSL https://ftp.ncbi.nlm.nih.gov/entrez/entrezdirect/install-edirect.sh)"

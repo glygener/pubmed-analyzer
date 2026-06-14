@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import csv
 from pathlib import Path
 from pprint import pprint
 import sys
@@ -14,9 +15,14 @@ from pydantic import BaseModel
 
 parser = ArgumentParser()
 parser.add_argument(
-    "filename",
+    "file_path",
     type=str,
-    help="File name to run analysis on.",
+    help="Full XML file path to run analysis on.",
+)
+parser.add_argument(
+    "--csv",
+    action="store_true",
+    help="Write parsed data to csv.",
 )
 args = parser.parse_args()
 
@@ -127,7 +133,7 @@ def parse_mesh_terms(descriptors: list[_Element]) -> list[MeshTerm]:
     return mesh_term_models
 
 
-def parse_article(article: _Element) -> Article:
+def parse_article(article: _Element, csv_file_path: Path) -> Article:
     pmid = get_required_text(article, ".//PMID")
     title = get_required_text(article, ".//ArticleTitle")
 
@@ -142,6 +148,32 @@ def parse_article(article: _Element) -> Article:
         article.findall(".//MeshHeadingList/MeshHeading/DescriptorName")
     )
 
+    # Check for csv output option
+    if args.csv:
+        with open(csv_file_path, "a", newline="") as csvfile:
+            writer = csv.DictWriter(
+                csvfile,
+                fieldnames=[
+                    "pmid",
+                    "name",
+                    "department",
+                    "institution",
+                    "city",
+                    "country",
+                ],
+            )
+            for author in authors:
+                writer.writerow(
+                    {
+                        "pmid": pmid,
+                        "name": author.name,
+                        "department": author.department,
+                        "institution": author.institution,
+                        "city": author.city,
+                        "country": author.country,
+                    }
+                )
+
     return Article(
         pmid=pmid,
         title=title,
@@ -155,22 +187,39 @@ def parse_article(article: _Element) -> Article:
 
 def main():
     # Gather args and file path for reading
-    filename: str = args.filename
-    data_dir = Path(__file__).parent / "data"
-    file_path = data_dir / f"{filename.lower().replace(' ', '_')}.xml"
+    file_path = Path(args.file_path)
 
+    # Check for file
     if not file_path.exists():
-        print(f"The file {file_path} cannot be found")
-        return
+        raise FileNotFoundError(f"The file {file_path.__str__()} cannot be found")
 
-    with open(file_path, "rb") as f:
-        results: list[Article] = []
-        for _, article in etree.iterparse(f, tag="PubmedArticle"):
-            results.append(parse_article(article))
-            article.clear(keep_tail=True)
+    # Clear csv file if needed
+    csv_file_path = Path(file_path.parent / f"{file_path.stem}.csv")
+    if args.csv:
+        with open(csv_file_path, "w", newline="") as csvfile:
+            field_names = [
+                "pmid",
+                "name",
+                "department",
+                "institution",
+                "city",
+                "country",
+            ]
+            writer = csv.DictWriter(csvfile, fieldnames=field_names)
+            writer.writeheader()
 
-    for a in results:
-        print(a.model_dump_json(indent=2))
+    try:
+        with open(file_path, "rb") as f:
+            results: list[Article] = []
+            for _, article in etree.iterparse(f, tag="PubmedArticle"):
+                results.append(parse_article(article, csv_file_path))
+                article.clear(keep_tail=True)
+    except etree.XMLSyntaxError as e:
+        raise etree.XMLSyntaxError(
+            f"Invalid XML file: {file_path.__str__()}", e.error_log
+        )
+
+    print([a.model_dump_json(indent=2) for a in results])
 
 
 if __name__ == "__main__":

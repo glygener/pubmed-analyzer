@@ -3,11 +3,12 @@
 set -euo pipefail
 
 usage() {
-    echo "Usage: $0 [-r] SEARCH_TERM"
+    echo "Usage: $0 [-r] [-o output_dir] search_term"
     exit 1
 }
 
 refresh=false
+output_dir=""
 search_parts=()
 
 while [[ $# -gt 0 ]]; do
@@ -15,6 +16,11 @@ while [[ $# -gt 0 ]]; do
         -r)
             refresh=true
             shift
+            ;;
+        -o)
+            [[ $# -lt 2 ]] && usage
+            output_dir="$2"
+            shift 2
             ;;
         *)
             search_parts+=("$1")
@@ -30,7 +36,14 @@ fi
 search_term="${search_parts[*]}"
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-data_dir="$script_dir/data"
+repo_root="$(cd "$script_dir/.." && pwd)"
+
+if [[ -z "$output_dir" ]]; then
+    data_dir="$repo_root/data"
+else
+    data_dir="$output_dir"
+fi
+
 mkdir -p "$data_dir"
 
 file_name="$(echo "$search_term" | tr '[:upper:]' '[:lower:]' | sed 's/ /_/g').xml"
