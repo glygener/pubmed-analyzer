@@ -1,17 +1,26 @@
 # PubMed Analyzer
 ## Requirements
 * [EDirect](#edirect)
+* [Docker](https://docs.docker.com/engine/install/)
 ## Usage
 This project contains scripts and tooling for PubMed data querying and analysis.
+
+### Streamlit (WIP)
+The streamlit app in `streamlit/` analyzes JSON data produced by the parsing script and visualizes them in the browser.
+
+* Run `docker compose up` in the repository root to bring up the streamlit app in a docker container. Once the container initializes, navigate to http://localhost:8501 in your browser to see the frontend. The docker container mounts the `data/` directory in the repository and the streamlit app scans the mounted directory for `.json` files to analyze.
+
+### Data Scripts
 * `data_scripts/search.sh [-r] [-o output_dir] search_term` Searches pubmed with a given search term an outputs the results to an XML file named after the search term
    * -r: optional flag forces refresh of of the given search
    * -o output_dir: optional arg specifies an output directory for the resulting xml file (default is pubmed-analyzer/data)
    * search_term: the term to search PubMed for using EDirect
 
-* `data_scripts/parse.py [-h] [--csv] file_path` parses a given PubMed results XML file into a JSON file, pulling out each article's pmid, title, publication month and year, journal name, and author information
+* `data_scripts/parse.py [-h] [--csv] [-o, --output OUTPUT] file_path` parses a given PubMed results XML file into a JSON file, pulling out each article's pmid, title, publication month and year, journal name, and author information
 
    * -h: show usage information
    * --csv: optional flag tells the script to output a flat csv file with author information in addition to JSON output
+   * -o, --output OUTPUT: specify file to output results to.
    * file_path: full path to the XML file to be parsed
       
 ## <a name="edirect"></a>EDirect Installation Instructions

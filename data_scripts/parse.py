@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 import csv
+import json
 from pathlib import Path
 from pprint import pprint
 import sys
 
 from argparse import ArgumentParser
-from typing import Optional
 from lxml import etree
 from lxml.etree import _Element  # type: ignore
 import pycountry
-from gliner import GLiNER
+from gliner2 import GLiNER2
 
-from pydantic import BaseModel
+from streamlit.models import Author, MeshTerm, Article
 
 parser = ArgumentParser()
 parser.add_argument(
@@ -24,38 +24,30 @@ parser.add_argument(
     action="store_true",
     help="Write parsed data to csv.",
 )
+parser.add_argument(
+    "-o",
+    "--output",
+    help="Specify file to output results to.",
+)
 args = parser.parse_args()
 
 
-class Author(BaseModel):
-    name: str
-    department: Optional[str] = None
-    institution: Optional[str] = None
-    city: Optional[str] = None
-    country: Optional[str] = None
-
-
-class MeshTerm(BaseModel):
-    term: str
-    ui: str
-    major_topic: bool
-
-
-class Article(BaseModel):
-    pmid: str
-    title: str
-    pub_year: int
-    pub_month: Optional[str] = None
-    journal: str
-    authors: list[Author]
-    mesh_terms: Optional[list[MeshTerm]] = []
-
-
 # Initialize gliner
-model = GLiNER.from_pretrained("urchade/gliner_medium-v2.1")
-labels = ["department", "institution", "city", "country"]
+extractor = GLiNER2.from_pretrained("fastino/gliner2-base-v1")
+schema = extractor.create_schema().entities(
+    {
+        "institution": "A university, reasearch center, or institution where research happens",
+        "department": "Department within an research institution",
+        "city": {
+            "description": "The city where an institution may reside",
+            "threshold": 0.8,
+        },
+        "state": "The state where the city of the institution exists",
+        "country": "The country where an institution resides",
+    },
+)
 
-# Static list of countries for matching afiliations
+# Static list of countries for matching affiliations
 COUNTRIES = {c.name.lower(): c.name for c in pycountry.countries}
 # Add common variants
 COUNTRIES.update(
@@ -80,35 +72,24 @@ def get_required_text(element: _Element, xpath: str) -> str:
 
 
 def get_affiliation_info(text: str | None) -> dict[str, str | None]:
+    results: dict[str, str | None] = {
+        "institution": None,
+        "department": None,
+        "city": None,
+        "state": None,
+        "country": None,
+    }
     if text:
-        entities = model.predict_entities(text, labels)
-        department = institution = city = country = None
+        entities = extractor.extract(text, schema, include_confidence=True)["entities"]
 
-        for entity in entities:
-            match entity["label"]:
-                case "department":
-                    department = entity["text"]
-                case "institution":
-                    institution = entity["text"]
-                case "city":
-                    if city:
-                        city = f"{city}, {entity['text']}"
-                    else:
-                        city = entity["text"]
-                case "country":
-                    country = entity["text"]
-                    if country in COUNTRIES.keys():
-                        country = COUNTRIES[country]
-                case _:
-                    continue
+        for label in entities:
+            top = 0
+            for entity in entities[label]:
+                if entity["confidence"] > top:
+                    top = entity["confidence"]
+                    results[label] = entity["text"]
 
-        return {
-            "department": department,
-            "institution": institution,
-            "city": city,
-            "country": country,
-        }
-    return {}
+    return results
 
 
 def parse_authors(authors: list[_Element]) -> list[Author]:
@@ -193,8 +174,15 @@ def main():
     if not file_path.exists():
         raise FileNotFoundError(f"The file {file_path.__str__()} cannot be found")
 
+    # Output file
+    if args.output:
+        output_path = Path(args.output)
+        output_file_string = f"{output_path.parent}/{output_path.stem}"
+    else:
+        output_file_string = f"{file_path.parent}/{file_path.stem}"
+
     # Clear csv file if needed
-    csv_file_path = Path(file_path.parent / f"{file_path.stem}.csv")
+    csv_file_path = Path(f"{output_file_string}.csv")
     if args.csv:
         with open(csv_file_path, "w", newline="") as csvfile:
             field_names = [
@@ -219,7 +207,10 @@ def main():
             f"Invalid XML file: {file_path.__str__()}", e.error_log
         )
 
-    print([a.model_dump_json(indent=2) for a in results])
+    # Write results to JSON
+    json_file_path = Path(f"{output_file_string}.json")
+    with open(json_file_path, "w") as f:
+        json.dump(([a.model_dump() for a in results]), f)
 
 
 if __name__ == "__main__":
