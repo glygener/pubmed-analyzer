@@ -4,6 +4,7 @@ from typing import Optional
 
 class Author(BaseModel):
     name: str
+    affiliation_text: Optional[str] = None
     department: Optional[str] = None
     institution: Optional[str] = None
     city: Optional[str] = None

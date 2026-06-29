@@ -9,6 +9,7 @@ services:
     volumes:
       - ./streamlit:/app
       - ./data:/data
+      - ./shared:/app/shared
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8501/_stcore/health"]
       interval: 30s

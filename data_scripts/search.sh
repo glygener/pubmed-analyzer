@@ -59,6 +59,6 @@ fi
 echo "Running PubMed query..."
 echo "Search term: $search_term"
 
-esearch -db pubmed -query "$search_term" | efetch -format xml > "$file_path"
+esearch -db pubmed -query "$search_term" | efetch -format xml | | sed -e 's/&alpha;/α/g' -e 's/&beta;/β/g' -e 's/&gamma;/γ/g' > "$file_path"
 
 echo "Saved results to $file_path"

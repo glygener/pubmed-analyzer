@@ -2,7 +2,7 @@
 import csv
 import json
 from pathlib import Path
-from pprint import pprint
+import re
 import sys
 
 from argparse import ArgumentParser
@@ -11,7 +11,8 @@ from lxml.etree import _Element  # type: ignore
 import pycountry
 from gliner2 import GLiNER2
 
-from streamlit.models import Author, MeshTerm, Article
+
+from shared.models import Author, MeshTerm, Article
 
 parser = ArgumentParser()
 parser.add_argument(
@@ -92,12 +93,25 @@ def get_affiliation_info(text: str | None) -> dict[str, str | None]:
     return results
 
 
+def parse_author_name(author: _Element) -> str:
+    first_name = author.findtext(".//ForeName")
+    last_name = author.findtext(".//LastName")
+    if first_name:
+        return f"{first_name} {last_name}" if last_name else first_name
+    if last_name:
+        return last_name
+
+    return get_required_text(author, ".//CollectiveName")
+
+
 def parse_authors(authors: list[_Element]) -> list[Author]:
     author_list: list[Author] = []
     for author in authors:
-        name = f"{get_required_text(author, ".//ForeName")} {get_required_text(author, ".//LastName")}"
-        affiliation = get_affiliation_info(author.findtext(".//Affiliation"))
-        author_list.append(Author(name=name, **affiliation))
+        name = parse_author_name(author)
+        text = author.findtext(".//Affiliation")
+        if text:
+            affiliation = get_affiliation_info(text)
+            author_list.append(Author(name=name, affiliation_text=text, **affiliation))
     return author_list
 
 
@@ -114,11 +128,22 @@ def parse_mesh_terms(descriptors: list[_Element]) -> list[MeshTerm]:
     return mesh_term_models
 
 
+def parse_year(article: _Element) -> str:
+    try:
+        return get_required_text(article, ".//Journal//Year")
+    except ValueError:
+        medline_date = article.findtext(".//Journal//MedlineDate")
+        match = re.match(r"(\d{4})", medline_date) if medline_date else None
+        return (
+            match.group(1) if match else get_required_text(article, ".//Journal//Year")
+        )
+
+
 def parse_article(article: _Element, csv_file_path: Path) -> Article:
     pmid = get_required_text(article, ".//PMID")
     title = get_required_text(article, ".//ArticleTitle")
 
-    pub_year_text = get_required_text(article, ".//Journal//Year")
+    pub_year_text = parse_year(article)
     pub_month = article.findtext(".//Journal//Month")
 
     journal = get_required_text(article, ".//Journal//Title")
@@ -141,6 +166,7 @@ def parse_article(article: _Element, csv_file_path: Path) -> Article:
                     "institution",
                     "city",
                     "country",
+                    "full_text",
                 ],
             )
             for author in authors:
@@ -152,6 +178,7 @@ def parse_article(article: _Element, csv_file_path: Path) -> Article:
                         "institution": author.institution,
                         "city": author.city,
                         "country": author.country,
+                        "full_text": author.affiliation_text,
                     }
                 )
 
@@ -192,6 +219,7 @@ def main():
                 "institution",
                 "city",
                 "country",
+                "full_text",
             ]
             writer = csv.DictWriter(csvfile, fieldnames=field_names)
             writer.writeheader()
