@@ -5,10 +5,12 @@
 ## Usage
 This project contains scripts and tooling for PubMed data querying and analysis.
 
-### Streamlit (WIP)
-The streamlit app in `streamlit/` analyzes JSON data produced by the parsing script and visualizes them in the browser.
+### Streamlit
+The streamlit app in `streamlit/` analyzes JSONL files produced by the parsing script and visualizes them in the browser.
 
-* Run `docker compose up` in the repository root to bring up the streamlit app in a docker container. Once the container initializes, navigate to http://localhost:8501 in your browser to see the frontend. The docker container mounts the `data/` directory in the repository and the streamlit app scans the mounted directory for `.json` files to analyze.
+* (docker compose) Run `docker compose up` in the repository root to bring up the streamlit app in a docker container. Once the container initializes, navigate to http://localhost:8501 in your browser to see the frontend. The docker container mounts the `data/` directory in the repository and the streamlit app scans the mounted directory for `.jsonl` files to analyze.
+
+* (docker) Pull the image from glygen/pubmed-analyzer via `docker pull glygen/pubmed-analyzer:0.0.1`. Run the container via `docker run -v {YOUR_DATA_DIRECTORY}:/data -p 8501:8501 pubmed-analyzer` to start the container. Once the container initializes, navigate to http://localhost:8501 in your browser to see the frontend. The streamlit app scans the mounted data directory for `.jsonl` files to analyze. Alternatively, you may build the image from scratch via `cd streamlit-app/ && docker build -t pubmed-analyzer .` and then run it as normal.
 
 ### Data Scripts
 * `data_scripts/search.sh [-r] [-o output_dir] search_term` Searches pubmed with a given search term an outputs the results to an XML file named after the search term

@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 import csv
+from functools import lru_cache
+from io import TextIOWrapper
 import json
 from pathlib import Path
 import re
@@ -12,7 +14,7 @@ import pycountry
 from gliner2 import GLiNER2
 
 
-from shared.models import Author, MeshTerm, Article
+from models import Author, MeshTerm, Article
 
 parser = ArgumentParser()
 parser.add_argument(
@@ -29,6 +31,12 @@ parser.add_argument(
     "-o",
     "--output",
     help="Specify file to output results to.",
+)
+parser.add_argument(
+    "-r",
+    "--recover",
+    action="store_true",
+    help="Flag to indicate when to run parser in recovery mode to pick up where it left off.",
 )
 args = parser.parse_args()
 
@@ -72,6 +80,7 @@ def get_required_text(element: _Element, xpath: str) -> str:
     return text.strip()
 
 
+@lru_cache(maxsize=100000)
 def get_affiliation_info(text: str | None) -> dict[str, str | None]:
     results: dict[str, str | None] = {
         "institution": None,
@@ -139,7 +148,7 @@ def parse_year(article: _Element) -> str:
         )
 
 
-def parse_article(article: _Element, csv_file_path: Path) -> Article:
+def parse_article(article: _Element, csvfile: TextIOWrapper | None) -> Article:
     pmid = get_required_text(article, ".//PMID")
     title = get_required_text(article, ".//ArticleTitle")
 
@@ -155,32 +164,31 @@ def parse_article(article: _Element, csv_file_path: Path) -> Article:
     )
 
     # Check for csv output option
-    if args.csv:
-        with open(csv_file_path, "a", newline="") as csvfile:
-            writer = csv.DictWriter(
-                csvfile,
-                fieldnames=[
-                    "pmid",
-                    "name",
-                    "department",
-                    "institution",
-                    "city",
-                    "country",
-                    "full_text",
-                ],
+    if csvfile:
+        writer = csv.DictWriter(
+            csvfile,
+            fieldnames=[
+                "pmid",
+                "name",
+                "department",
+                "institution",
+                "city",
+                "country",
+                "full_text",
+            ],
+        )
+        for author in authors:
+            writer.writerow(
+                {
+                    "pmid": pmid,
+                    "name": author.name,
+                    "department": author.department,
+                    "institution": author.institution,
+                    "city": author.city,
+                    "country": author.country,
+                    "full_text": author.affiliation_text,
+                }
             )
-            for author in authors:
-                writer.writerow(
-                    {
-                        "pmid": pmid,
-                        "name": author.name,
-                        "department": author.department,
-                        "institution": author.institution,
-                        "city": author.city,
-                        "country": author.country,
-                        "full_text": author.affiliation_text,
-                    }
-                )
 
     return Article(
         pmid=pmid,
@@ -210,6 +218,7 @@ def main():
 
     # Clear csv file if needed
     csv_file_path = Path(f"{output_file_string}.csv")
+    csvfile = None
     if args.csv:
         with open(csv_file_path, "w", newline="") as csvfile:
             field_names = [
@@ -223,22 +232,32 @@ def main():
             ]
             writer = csv.DictWriter(csvfile, fieldnames=field_names)
             writer.writeheader()
+        csvfile = open(csv_file_path, "a", newline="")
+
+    # Recovery mode
+    if not args.recover:
+        open(f"{output_file_string}.jsonl", "w").close()
+    # else:
+    #     with open(f"{output_file_string}_progress.txt", "r") as progress:
+    #         last_pmid = progress.readline()
 
     try:
-        with open(file_path, "rb") as f:
-            results: list[Article] = []
-            for _, article in etree.iterparse(f, tag="PubmedArticle"):
-                results.append(parse_article(article, csv_file_path))
-                article.clear(keep_tail=True)
+        with open(f"{output_file_string}.jsonl", "a") as jsonl_file:
+            with open(file_path, "rb") as xml_file:
+                for _, article in etree.iterparse(
+                    xml_file, tag="PubmedArticle", recover=True
+                ):
+                    parsed_article = parse_article(article, csvfile)
+                    jsonl_file.write(json.dumps(parsed_article.model_dump()))
+                    jsonl_file.write("\n")
+                    article.clear()
+                    while article.getprevious() is not None:
+                        del article.getparent()[0]
     except etree.XMLSyntaxError as e:
-        raise etree.XMLSyntaxError(
-            f"Invalid XML file: {file_path.__str__()}", e.error_log
-        )
-
-    # Write results to JSON
-    json_file_path = Path(f"{output_file_string}.json")
-    with open(json_file_path, "w") as f:
-        json.dump(([a.model_dump() for a in results]), f)
+        raise RuntimeError(f"Invalid XML in {file_path} at line {e.position[0]}") from e
+    finally:
+        if csvfile:
+            csvfile.close()
 
 
 if __name__ == "__main__":

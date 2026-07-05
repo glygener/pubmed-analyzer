@@ -4,12 +4,12 @@ Here's our first attempt at using data to create a table:
 """
 
 from datetime import datetime
+import json
 
 import streamlit as st
 import os
-import ijson
 from analysis_modules.author_affiliation import AuthorAnalyzer
-from shared.models import Article
+from models import Article
 
 
 @st.cache_data
@@ -17,15 +17,15 @@ def process_file(file: str):
     author_analyzer = AuthorAnalyzer()
 
     with open(file) as f:
-        for article in ijson.items(f, "item"):
-            author_analyzer.process_article(Article(**article))
+        for article in f:
+            author_analyzer.process_article(Article(**json.loads(article)))
 
     return {"author": author_analyzer}
 
 
 files = []
 for file in os.listdir("/data"):
-    if file.endswith(".json"):
+    if file.endswith(".jsonl"):
         files.append(file)
 
 file_select = f"/data/{st.sidebar.selectbox("Choose a file for analysis:", files)}"

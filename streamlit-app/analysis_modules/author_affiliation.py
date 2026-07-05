@@ -1,7 +1,7 @@
 import altair as alt
 import pandas as pd
 
-from shared.models import Article
+from models import Article
 
 
 class AuthorAnalyzer:
