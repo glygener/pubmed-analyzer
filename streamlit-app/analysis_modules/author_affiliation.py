@@ -1,10 +1,12 @@
 import altair as alt
 import pandas as pd
+import streamlit as st
 
+from .base_module import BaseModule
 from models import Article
 
 
-class AuthorAnalyzer:
+class AuthorAffiliation(BaseModule):
     def __init__(self):
         self.total_authors: int = 0
         self.total_institutions: int = 0
@@ -50,14 +52,14 @@ class AuthorAnalyzer:
             ]
         )
 
-    def chart(self):
-        df = self.dataframe().melt(
+    def chart(_self):
+        df = _self.dataframe().melt(
             id_vars="attribute",
             value_vars=["present", "missing"],
             var_name="status",
             value_name="count",
         )
-        return (
+        chart = (
             alt.Chart(df)
             .mark_bar()
             .encode(
@@ -79,3 +81,4 @@ class AuthorAnalyzer:
             )
             .properties(height=550)
         )
+        st.altair_chart(chart)

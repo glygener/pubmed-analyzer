@@ -1,13 +1,13 @@
 services:
   app:
     build:
-      context: ./streamlit
+      context: ./streamlit-app
       dockerfile: Dockerfile
-    image: pubmed-analyzer:latest
+    image: pubmed-analyzer
     ports: 
       - "8501:8501"
     volumes:
-      - ./streamlit:/app
+      - ./streamlit-app:/app
       - ./data:/data
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8501/_stcore/health"]

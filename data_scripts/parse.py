@@ -10,11 +10,10 @@ import sys
 from argparse import ArgumentParser
 from lxml import etree
 from lxml.etree import _Element  # type: ignore
-import pycountry
 from gliner2 import GLiNER2
 
 
-from models import Author, MeshTerm, Article
+from data_scripts.models import COUNTRIES, Author, MeshTerm, Article
 
 parser = ArgumentParser()
 parser.add_argument(
@@ -56,19 +55,6 @@ schema = extractor.create_schema().entities(
     },
 )
 
-# Static list of countries for matching affiliations
-COUNTRIES = {c.name.lower(): c.name for c in pycountry.countries}
-# Add common variants
-COUNTRIES.update(
-    {
-        "usa": "United States",
-        "u.s.a.": "United States",
-        "uk": "United Kingdom",
-        "u.k.": "United Kingdom",
-        "united states of america": "United States",
-    }
-)
-
 
 def get_required_text(element: _Element, xpath: str) -> str:
     text = element.findtext(xpath)
@@ -97,7 +83,13 @@ def get_affiliation_info(text: str | None) -> dict[str, str | None]:
             for entity in entities[label]:
                 if entity["confidence"] > top:
                     top = entity["confidence"]
-                    results[label] = entity["text"]
+                    if label == "country":
+                        try:
+                            results[label] = COUNTRIES[entity["text"].lower()]
+                        except KeyError:
+                            results[label] = None
+                    else:
+                        results[label] = entity["text"]
 
     return results
 
@@ -118,9 +110,8 @@ def parse_authors(authors: list[_Element]) -> list[Author]:
     for author in authors:
         name = parse_author_name(author)
         text = author.findtext(".//Affiliation")
-        if text:
-            affiliation = get_affiliation_info(text)
-            author_list.append(Author(name=name, affiliation_text=text, **affiliation))
+        affiliation = get_affiliation_info(text)
+        author_list.append(Author(name=name, affiliation_text=text, **affiliation))
     return author_list
 
 
