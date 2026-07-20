@@ -9,36 +9,51 @@ This project contains scripts and tooling for PubMed data querying and analysis.
 ### Makefile
 The easiest way to use the available commands in the `Makefile` from the root of the directory:
 
-* `make search SEARCH_INPUT="example"`
-	* Searches PudMed for a given search term. `SEARCH_INPUT` should be valid input for the [search script](#search) wrapped in double quotes.
-   * Note: To make a search using the script options and a query with spaces, wrap the query in single quotes inside the double quotes. For example: `make search SEARCH_INPUT="-o ~/my-data 'term_1 AND term_2'"` queries PubMed with the query string "term_1 AND term_2" and creates a new file at `./my-data/term_1_and_term_2.xml`.
+```
+make search SEARCH_INPUT="example"
+```
+* Searches PudMed for a given search term. `SEARCH_INPUT` should be valid input for the [search script](#search) wrapped in double quotes.
+* Note: To make a search using the script options and a query with spaces, wrap the query in single quotes inside the double quotes. For example: `make search SEARCH_INPUT="-o ~/my-data 'term_1 AND term_2'"` queries PubMed with the query string "term_1 AND term_2" and creates a new file at `./my-data/term_1_and_term_2.xml`.
 
-* `make parse PARSE_INPUT="example"`
-   * Parses a given XML file into a JSONL file for analysis. `PARSE_INPUT` should be valid input for the [parse script](#parse) wrapped in double quotes.
 
-* `make pull [TAG="latest"]`
-   * Pull the latest `glygen/pubmed-analyzer` image by default.
-   * Optionally set the `TAG` variable to pull an image with a specific version tag.
+```
+make parse PARSE_INPUT="example"
+```
+* Parses a given XML file into a JSONL file for analysis. `PARSE_INPUT` should be valid input for the [parse script](#parse) wrapped in double quotes.
 
-* `make run [DATA_DIRECTORY="./data/"] [TAG="latest"]`
-   * Run `make run` to start the pubmed-analysis Streamlit app in a docker container using the `glygen/pubmed-analyzer:latest` image by default and `./data/` as the default data mount for the container.
-   * Optionally set the `DATA_DIRECTORY` variable to point to a different directory with your JSONL data to be analyzed.
-   * Optionally set the `TAG` variable to run a container with a specific version tag.
+```
+make pull [TAG="latest"]
+```
+* Pull the latest `glygen/pubmed-analyzer` image by default.
+* Optionally set the `TAG` variable to pull an image with a specific version tag.
 
-* `make run-dev`
-   * Run the pubmed-analysis Streamlit app using docker compose for development. See the (docker compose)[compose] section for more.
+```make run [DATA_DIRECTORY="./data/"] [TAG="latest"]```
+* Run `make run` to start the pubmed-analysis Streamlit app in a docker container using the `glygen/pubmed-analyzer:latest` image by default and `./data/` as the default data mount for the container.
+* Optionally set the `DATA_DIRECTORY` variable to point to a different directory with your JSONL data to be analyzed.
+* Optionally set the `TAG` variable to run a container with a specific version tag.
 
-* `make build [TAG="latest"]`
-   * Build an image tagged as `glygen/pubmed-analyzer:latest` by default.
-   * Optionally set the `TAG` variable to build an image with a specific version tag.
+```
+make run-dev
+```
+* Run the pubmed-analysis Streamlit app using docker compose for development. See the (docker compose)[compose] section for more.
 
-* `make push [TAG="latest"]`
-   * Push an image to the glygen repository tagged as `glygen/pubmed-analyzer:latest` by default.
-   * Optionally set the `TAG` variable to push an image with a specific version tag.
+```
+make build [TAG="latest"]
+```
+* Build an image tagged as `glygen/pubmed-analyzer:latest` by default.
+* Optionally set the `TAG` variable to build an image with a specific version tag.
 
-* `make build push [TAG="latest"]`
-   * One line command to build and push an image to the glygen repository tagged as `glygen/pubmed-analyzer:latest` by default.
-   * Optionally set the `TAG` variable to build and push an image with a specific version tag.
+```
+make push [TAG="latest"]
+```
+* Push an image to the glygen repository tagged as `glygen/pubmed-analyzer:latest` by default.
+* Optionally set the `TAG` variable to push an image with a specific version tag.
+
+```
+make build push [TAG="latest"]
+```
+* One line command to build and push an image to the glygen repository tagged as `glygen/pubmed-analyzer:latest` by default.
+* Optionally set the `TAG` variable to build and push an image with a specific version tag.
 
 ### Streamlit
 The streamlit app in `streamlit/` analyzes JSONL files produced by the parsing script and visualizes them in the browser. To run the app, do one of the following:
@@ -49,17 +64,24 @@ The streamlit app in `streamlit/` analyzes JSONL files produced by the parsing s
 
 
 ### Data Scripts
-* <a name="search"></a>`data_scripts/search.sh [-r] [-o output_dir] search_term` Searches PubMed with a given search term an outputs the results to an XML file named after the search term
-   * -r: optional flag forces refresh of of the given search
-   * -o output_dir: optional arg specifies an output directory for the resulting xml file (default is pubmed-analyzer/data)
-   * search_term: the term to search PubMed for using EDirect
+<a name="search"></a>
+```
+data_scripts/search.sh [-r] [-o output_dir] search_term
+```
+Searches PubMed with a given search term an outputs the results to an XML file named after the search term
+* -r: optional flag forces refresh of of the given search
+* -o output_dir: optional arg specifies an output directory for the resulting xml file (default is pubmed-analyzer/data)
+* search_term: the term to search PubMed for using EDirect
 
-* <a name="parse"></a>`python -m data_scripts.parse [-h] [--csv] [-o, --output OUTPUT] file_path` parses a given PubMed results XML file into a JSON file, pulling out each article's pmid, title, publication month and year, journal name, and author information
-
-   * -h: show usage information
-   * --csv: optional flag tells the script to output a flat csv file with author information in addition to JSON output
-   * -o, --output OUTPUT: specify file to output results to.
-   * file_path: full path to the XML file to be parsed
+<a name="parse"></a>
+```
+python -m data_scripts.parse [-h] [--csv] [-o, --output OUTPUT] file_path
+```
+parses a given PubMed results XML file into a JSON file, pulling out each article's pmid, title, publication month and year, journal name, and author information
+* -h: show usage information
+* --csv: optional flag tells the script to output a flat csv file with author information in addition to JSON output
+* -o, --output OUTPUT: specify file to output results to.
+* file_path: full path to the XML file to be parsed
       
 ## <a name="edirect"></a>EDirect Installation Instructions
 Open a terminal window and run one of the following commands to download and install the software:
