@@ -32,5 +32,10 @@ class JournalPieChart(BaseModule):
 
     def pie_chart(_self):
         df = _self.dataframe()
-        chart = alt.Chart(df).mark_arc().encode(theta="count", color="journals")
-        st.altair_chart(chart)
+        legend = alt.Legend(labelLimit=10000)
+        chart = (
+            alt.Chart(df)
+            .mark_arc()
+            .encode(theta="count", color=alt.Color("journals", legend=legend))
+        )
+        st.altair_chart(chart, width="stretch")
