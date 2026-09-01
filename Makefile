@@ -16,10 +16,10 @@ IMAGE := $(IMAGE_NAME):$(TAG)
 .PHONY: search parse run run-dev push pull
 
 search:
-	data_scripts/search.sh $(SEARCH_INPUT)
+	data_retrieval/search.sh $(SEARCH_INPUT)
 
 parse:
-	python -m data_scripts.parse $(PARSE_INPUT)
+	python -m data_normalization.parse $(PARSE_INPUT)
 
 pull:
 	docker pull $(IMAGE)

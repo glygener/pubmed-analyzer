@@ -11,7 +11,6 @@ from analysis_modules.journal_pie_chart import JournalPieChart
 from models import Article
 
 
-@st.cache_data
 def process_file(file: str) -> dict[str, Any]:
     author_affiliation = AuthorAffiliation()
     author_map = AuthorMap()

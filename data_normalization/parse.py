@@ -13,7 +13,7 @@ from lxml.etree import _Element  # type: ignore
 from gliner2 import GLiNER2
 
 
-from data_scripts.models import COUNTRIES, Author, MeshTerm, Article
+from data_normalization.models import COUNTRIES, Author, MeshTerm, Article
 
 parser = ArgumentParser()
 parser.add_argument(
