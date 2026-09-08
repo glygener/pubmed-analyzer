@@ -30,8 +30,8 @@ run:
 run-dev:
 	docker compose up
 
-build: 
-	cd streamlit-app && docker build -t $(IMAGE) .
+build:
+	cd streamlit-app && docker buildx build --platform linux/amd64,linux/arm64 -t $(IMAGE) .
 
 push:
 	docker login && docker image push $(IMAGE)
