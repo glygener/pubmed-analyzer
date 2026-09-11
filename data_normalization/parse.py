@@ -13,7 +13,14 @@ from lxml.etree import _Element  # type: ignore
 from gliner2 import GLiNER2
 
 
-from data_normalization.models import COUNTRIES, Author, MeshTerm, Article
+from data_normalization.models import (
+    COUNTRIES,
+    ArticleIds,
+    Author,
+    Grant,
+    MeshTerm,
+    Article,
+)
 
 parser = ArgumentParser()
 parser.add_argument(
@@ -139,6 +146,62 @@ def parse_year(article: _Element) -> str:
         )
 
 
+def parse_grant_list(grants: list[_Element]) -> list[Grant]:
+    grant_list: list[Grant] = []
+
+    for grant in grants:
+        country = grant.findtext(".//Country")
+        country_name = None
+        if country:
+            try:
+                country_name = COUNTRIES[country.lower()]
+            except KeyError:
+                country_name = country
+        grant_list.append(
+            Grant(
+                id=grant.findtext(".//GrantID"),
+                agency=grant.findtext(".//Agency"),
+                country=country_name,
+            )
+        )
+
+    return grant_list
+
+
+def parse_article_id_list(article_ids: list[_Element]) -> ArticleIds:
+    doi = pmc = None
+
+    for article_id in article_ids:
+        if article_id.get("IdType") == "doi":
+            doi = article_id.text
+        elif article_id.get("IdType") == "pmc":
+            pmc = article_id.text
+
+    return ArticleIds(doi=doi, pmc=pmc)
+
+
+def parse_publication_type_list(publication_types: list[_Element]) -> list[str]:
+    types_list: list[str] = []
+
+    for type in publication_types:
+        text = type.text
+        if text and not text.upper().startswith("RESEARCH SUPPORT"):
+            types_list.append(text)
+
+    return types_list
+
+
+def parse_keyword_list(keywords: list[_Element]) -> list[str]:
+    keyword_list: list[str] = []
+
+    for keyword in keywords:
+        text = keyword.text
+        if text:
+            keyword_list.append(text)
+
+    return keyword_list
+
+
 def parse_article(article: _Element, csvfile: TextIOWrapper | None) -> Article:
     pmid = get_required_text(article, ".//PMID")
     title = get_required_text(article, ".//ArticleTitle")
@@ -153,6 +216,16 @@ def parse_article(article: _Element, csvfile: TextIOWrapper | None) -> Article:
     mesh_terms = parse_mesh_terms(
         article.findall(".//MeshHeadingList/MeshHeading/DescriptorName")
     )
+
+    grant_list = parse_grant_list(article.findall(".//Grant"))
+    # article_id_list
+    article_id_list = parse_article_id_list(article.findall(".//ArticleId"))
+    # publication_type_list
+    publication_type_list = parse_publication_type_list(
+        article.findall(".//PublicationType")
+    )
+    # keyword_list
+    keyword_list = parse_keyword_list(article.findall(".//Keyword"))
 
     # Check for csv output option
     if csvfile:
@@ -189,6 +262,10 @@ def parse_article(article: _Element, csvfile: TextIOWrapper | None) -> Article:
         journal=journal,
         authors=authors,
         mesh_terms=mesh_terms,
+        grant_list=grant_list,
+        article_id_list=article_id_list,
+        publication_type_list=publication_type_list,
+        keyword_list=keyword_list,
     )
 
 

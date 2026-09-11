@@ -19,6 +19,17 @@ class MeshTerm(BaseModel):
     major_topic: bool
 
 
+class Grant(BaseModel):
+    id: Optional[str]
+    agency: Optional[str]
+    country: Optional[str]
+
+
+class ArticleIds(BaseModel):
+    doi: Optional[str]
+    pmc: Optional[str]
+
+
 class Article(BaseModel):
     pmid: str
     title: str
@@ -27,6 +38,10 @@ class Article(BaseModel):
     journal: str
     authors: list[Author]
     mesh_terms: Optional[list[MeshTerm]] = []
+    grant_list: Optional[list[Grant]] = []
+    article_id_list: Optional[ArticleIds] = None
+    publication_type_list: Optional[list[str]] = []
+    keyword_list: Optional[list[str]] = []
 
 
 # Static list of countries for matching affiliations
