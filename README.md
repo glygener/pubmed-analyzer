@@ -12,14 +12,14 @@ The easiest way to use the available commands in the `Makefile` from the root of
 ```
 make search SEARCH_INPUT="example"
 ```
-* Searches PudMed for a given search term. `SEARCH_INPUT` should be valid input for the [search script](data_retrieval/USAGE.md) wrapped in double quotes.
+* Searches PudMed for a given search term. `SEARCH_INPUT` should be valid input for the [search script](data_retrieval/README.md) wrapped in double quotes.
 * Note: To make a search using the script options and a query with spaces, wrap the query in single quotes inside the double quotes. For example: `make search SEARCH_INPUT="-o ~/my-data 'term_1 AND term_2'"` queries PubMed with the query string "term_1 AND term_2" and creates a new file at `./my-data/term_1_and_term_2.xml`.
 
 
 ```
 make parse PARSE_INPUT="example"
 ```
-* Parses a given XML file into a JSONL file for analysis. `PARSE_INPUT` should be valid input for the [parse script](data_normalization/USAGE.md) wrapped in double quotes.
+* Parses a given XML file into a JSONL file for analysis. `PARSE_INPUT` should be valid input for the [parse script](data_normalization/README.md) wrapped in double quotes.
 
 ```
 make pull [TAG="latest"]
