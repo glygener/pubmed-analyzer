@@ -5,6 +5,8 @@ IMAGE_NAME := glygen/pubmed-analyzer
 TAG ?= latest
 # Default data directory is "./data" unless overridden
 DATA_DIRECTORY ?= ./data/
+# Default logging directory is "./log" unless overridden
+LOGGING_DIRECTORY ?= ./log/
 # Input for search script
 SEARCH_INPUT ?=
 # Input for parse script
@@ -25,7 +27,7 @@ pull:
 	docker pull $(IMAGE)
 
 run:
-	docker run -v $(DATA_DIRECTORY):/data -p 8501:8501 $(IMAGE)
+	docker run -v $(LOGGING_DIRECTORY):/app/logs -v $(DATA_DIRECTORY):/data -p 8501:8501 $(IMAGE)
 
 run-dev:
 	docker compose up

@@ -28,7 +28,7 @@ make pull [TAG="latest"]
 * Optionally set the `TAG` variable to pull an image with a specific version tag.
 
 ```make run [DATA_DIRECTORY="./data/"] [TAG="latest"]```
-* Run `make run` to start the pubmed-analysis Streamlit app in a docker container using the `glygen/pubmed-analyzer:latest` image by default and `./data/` as the default data mount for the container.
+* Run `make run` to start the pubmed-analysis Streamlit app in a docker container using the `glygen/pubmed-analyzer:latest` image by default, `./log/` as the default logging mount for the container, and `./data/` as the default data mount for the container.
 * Optionally set the `DATA_DIRECTORY` variable to point to a different directory with your JSONL data to be analyzed.
 * Optionally set the `TAG` variable to run a container with a specific version tag.
 
@@ -58,9 +58,9 @@ make build push [TAG="latest"]
 ### Streamlit
 The streamlit app in `streamlit/` analyzes JSONL files produced by the parsing script and visualizes them in the browser. To run the app, do one of the following:
 
-* <a name="compose"></a>(docker compose) Run `docker compose up` in the repository root to bring up the streamlit app in a docker container. Once the container initializes, navigate to http://localhost:8501 in your browser to see the frontend. The docker container mounts the `./data/` directory in the repository and the streamlit app scans the mounted directory for `.jsonl` files to analyze. The `streamlit-app/` is also mounted to the container to allow for hot reloading while developing the Streamlit dashboard.
+* <a name="compose"></a>(docker compose) Run `docker compose up` in the repository root to bring up the streamlit app in a docker container. Once the container initializes, navigate to http://localhost:8501 in your browser to see the frontend. The container mounts a `./log/` directory in your current working directory for logging files. The docker container mounts the `./data/` directory in the repository and the streamlit app scans the mounted directory for `.jsonl` files to analyze. The `streamlit-app/` is also mounted to the container to allow for hot reloading while developing the Streamlit dashboard.
 
-* (docker) Pull the image from glygen/pubmed-analyzer via `docker pull glygen/pubmed-analyzer` to pull the latest image. Run the container via `docker run -v {YOUR_DATA_DIRECTORY}:/data -p 8501:8501 pubmed-analyzer` to start the container. Once the container initializes, navigate to http://localhost:8501 in your browser to see the frontend. The streamlit app scans the mounted data directory for `.jsonl` files to analyze. Alternatively, you may build the image from scratch via `cd streamlit-app/ && docker build -t pubmed-analyzer .` and then run it as described above.
+* (docker) Pull the image from glygen/pubmed-analyzer via `docker pull glygen/pubmed-analyzer` to pull the latest image. Run the container via `docker run -v {YOUR_LOG_DIRECTORY}:/app/log -v {YOUR_DATA_DIRECTORY}:/data -p 8501:8501 pubmed-analyzer` to start the container. Once the container initializes, navigate to http://localhost:8501 in your browser to see the frontend. The streamlit app scans the mounted data directory for `.jsonl` files to analyze. Alternatively, you may build the image from scratch via `cd streamlit-app/ && docker build -t pubmed-analyzer .` and then run it as described above.
       
 ## <a name="edirect"></a>EDirect Installation Instructions
 Open a terminal window and run one of the following commands to download and install the software:
